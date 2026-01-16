@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROBER | Precision Risk Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* --- VISUAL FX --- */
+        @keyframes flash-red {
+            0% {
+                background-color: rgba(69, 10, 10, 0);
+            }
+
+            50% {
+                background-color: rgba(220, 38, 38, 0.3);
+            }
+
+            100% {
+                background-color: rgba(69, 10, 10, 0);
+            }
+        }
+
+        @keyframes flash-blue {
+            0% {
+                background-color: #111827;
+            }
+
+            50% {
+                background-color: #172554;
+            }
+
+            100% {
+                background-color: #111827;
+            }
+        }
+
+        .animate-danger {
+            animation: flash-red 1.5s infinite;
+        }
+
+        .flash-update {
+            animation: flash-blue 0.3s ease-out;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #eab308;
+        }
+
+        body {
+            background-color: #020617;
+        }
+
+        /* Ultra Dark */
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body class="text-slate-300 font-mono min-h-screen p-4 selection:bg-yellow-500 selection:text-black">
+
+    <div class="max-w-7xl mx-auto mb-6 grid grid-cols-1 lg:grid-cols-4 gap-6 border-b border-slate-800 pb-6">
+
+        <div class="lg:col-span-1 flex flex-col justify-center">
+            <h1 class="text-4xl font-black text-white tracking-tighter">PROBER <span
+                    class="text-sm text-yellow-500 font-medium align-top">PRECISION</span></h1>
+            <div class="flex items-center gap-2 mt-2" id="connectionBadge">
+                <span class="w-2 h-2 rounded-full bg-yellow-600 animate-pulse" id="statusDot"></span>
+                <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold" id="statusText">Searching
+                    for Sniper...</span>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3 grid grid-cols-2 gap-4 items-end">
+            <div>
+                <label class="text-[10px] text-slate-500 uppercase font-bold">Ticker / Symbol</label>
+                <input type="text" value="SPY"
+                    class="w-full bg-slate-900 border border-slate-700 p-3 text-sm rounded font-bold text-center text-white focus:border-yellow-500 transition">
+            </div>
+
+            <div class="relative">
+                <label class="text-[10px] text-yellow-600 uppercase font-bold flex justify-between">
+                    Live Market Price
+                    <span class="text-[9px] cursor-pointer hover:text-white opacity-50" onclick="toggleSim()">[Toggle
+                        Sim]</span>
+                </label>
+                <input type="text" id="currentPrice" value="100.00" oninput="calculateAll()"
+                    class="w-full bg-slate-900 border border-yellow-800 text-yellow-400 p-3 text-2xl font-black rounded text-right shadow-[0_0_20px_rgba(234,179,8,0.05)] focus:shadow-[0_0_20px_rgba(234,179,8,0.2)] transition-all">
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <div class="lg:col-span-8 space-y-6">
+
+            <div
+                class="bg-slate-900/50 rounded-xl p-6 border border-slate-800 shadow-2xl relative overflow-hidden backdrop-blur-sm">
+                <div class="absolute top-0 right-0 p-4 opacity-5">
+                    <svg width="100" height="100" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 3v18h18v-2H5V3H3z" />
+                    </svg>
+                </div>
+
+                <div class="flex justify-between items-center mb-6 relative z-10">
+                    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <span class="text-yellow-500">///</span> Position Stack
+                    </h2>
+                    <span id="contractCount"
+                        class="bg-slate-800 text-[10px] px-2 py-1 rounded text-blue-400 font-bold border border-slate-700">EMPTY</span>
+                </div>
+
+                <div
+                    class="grid grid-cols-12 gap-4 text-[10px] text-slate-500 uppercase mb-3 px-3 font-bold tracking-wider">
+                    <div class="col-span-1">#</div>
+                    <div class="col-span-3">Fill Price</div>
+                    <div class="col-span-3">Size (Qty)</div>
+                    <div class="col-span-3">Capital Committed</div>
+                    <div class="col-span-2 text-right">Action</div>
+                </div>
+
+                <div id="positionsList" class="space-y-2 mb-6 max-h-[300px] overflow-y-auto pr-2">
+                </div>
+
+                <div
+                    class="grid grid-cols-12 gap-3 items-center bg-slate-950 p-4 rounded-lg border border-slate-800 shadow-inner group focus-within:border-blue-500/50 transition-colors">
+                    <div class="col-span-1 text-center text-blue-500 font-bold">+</div>
+                    <div class="col-span-3">
+                        <input type="text" id="newPrice" placeholder="Fill Price"
+                            class="w-full bg-slate-900 border-b border-slate-700 p-2 text-sm text-white focus:border-blue-500 placeholder-slate-700 transition-colors">
+                    </div>
+                    <div class="col-span-3">
+                        <input type="text" id="newSize" placeholder="Qty"
+                            class="w-full bg-slate-900 border-b border-slate-700 p-2 text-sm text-white focus:border-blue-500 placeholder-slate-700 transition-colors">
+                    </div>
+                    <div class="col-span-5">
+                        <button onclick="addPosition()"
+                            class="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded text-xs font-bold uppercase tracking-widest shadow-lg shadow-blue-900/20 transition-all transform active:scale-95">Lock
+                            Execution</button>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="bg-slate-900/30 rounded-xl p-6 border border-slate-800 border-dashed relative group hover:border-blue-500/30 transition-colors">
+                <div
+                    class="absolute -top-3 left-6 bg-slate-950 px-2 text-[10px] text-blue-400 uppercase tracking-widest font-bold border border-slate-800">
+                    Sandbox Environment</div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] text-slate-500 uppercase font-bold">Simulate Next Fill</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="simPrice" oninput="calculateAll()" placeholder="@ Price"
+                                    class="w-1/2 bg-slate-950 border border-slate-800 text-blue-300 p-3 rounded font-mono text-sm focus:border-blue-500 transition">
+                                <input type="text" id="simSize" oninput="calculateAll()" placeholder="Qty"
+                                    class="w-1/2 bg-slate-950 border border-slate-800 text-blue-300 p-3 rounded font-mono text-sm focus:border-blue-500 transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="simResultBox"
+                        class="flex flex-col justify-center space-y-2 opacity-30 transition-opacity duration-300">
+                        <div class="flex justify-between items-center p-2 rounded bg-slate-800/50">
+                            <span class="text-xs text-blue-200">New Breakeven</span>
+                            <span id="simNewAvg" class="font-mono text-white font-bold">---</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded bg-slate-800/50">
+                            <span class="text-xs text-blue-200">Proj. Winning Gap</span>
+                            <span id="simNewGap" class="font-mono font-bold">---</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="blunderGuard" class="mt-4 hidden animate-pulse">
+                    <div class="bg-red-950/30 border border-red-900/50 p-3 rounded flex gap-3 items-center">
+                        <span class="text-xl">⚠️</span>
+                        <div>
+                            <h4 class="text-red-400 text-xs font-bold uppercase">Risk Violation</h4>
+                            <p class="text-red-300 text-[10px]" id="blunderMsg">Dilution Alert: This bet removes all
+                                volatility buffer.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-4">
+
+            <div id="scoreCard"
+                class="bg-slate-900 p-8 rounded-xl border-l-4 border-slate-600 shadow-2xl transition-all duration-500 relative overflow-hidden">
+                <div class="absolute top-4 right-4">
+                    <span id="statusBadge"
+                        class="text-[9px] bg-slate-800 px-2 py-1 rounded text-slate-500 font-bold tracking-wider border border-slate-700">NO
+                        POSITION</span>
+                </div>
+
+                <h3 class="text-slate-500 text-[10px] uppercase tracking-widest font-bold mb-2">Winning Gap</h3>
+
+                <div class="flex items-baseline gap-1">
+                    <span id="gapDisplay"
+                        class="text-6xl font-black text-white tracking-tighter drop-shadow-lg">0.00</span>
+                </div>
+
+                <div class="flex items-baseline gap-1">
+                    <span id="gapPercent"
+                        class="text-6xl font-black text-white tracking-tighter drop-shadow-lg">0.00</span>
+                </div>
+
+                <!-- <div class="flex justify-between items-end mt-2">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold">ROI / Cushion</p>
+                    <p id="gapPercent" class="text-xl font-mono text-slate-500">0.00%</p>
+                </div> -->
+
+                <div class="mt-8 pt-6 border-t border-slate-800 space-y-3">
+                    <div class="flex justify-between text-xs group">
+                        <span class="text-slate-500 group-hover:text-white transition">Total Volume</span>
+                        <span id="totalContracts" class="font-mono text-slate-300">0</span>
+                    </div>
+                    <div class="flex justify-between text-xs group">
+                        <span class="text-slate-500 group-hover:text-white transition">Total Bet Size</span>
+                        <span id="totalCapital" class="font-mono text-slate-300">$0.00</span>
+                    </div>
+                    <!-- <div class="flex justify-between text-xs group">
+                        <span class="text-slate-500 group-hover:text-white transition">Total Current</span>
+                        <span id="totalCurrentCapital" class="font-mono text-slate-300">$0.00</span>
+                    </div> -->
+                    <div id="currentValueRow"
+                        class="flex justify-between items-center p-3 mt-2 rounded bg-slate-950 border border-slate-800 transition-all duration-300">
+                        <div class="flex items-center gap-2">
+                            <span id="pulseDot" class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+                            <span
+                                class="text-[10px] uppercase tracking-widest font-bold text-slate-500 group-hover:text-white transition">
+                                Liq. Value
+                            </span>
+                        </div>
+                        <span id="totalCurrentCapital"
+                            class="font-mono text-sm font-black text-slate-300 transition-all duration-300 drop-shadow-lg">
+                            $0.00
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-lg">
+                <h3 class="text-slate-500 text-[10px] uppercase tracking-widest font-bold mb-4 flex items-center gap-2">
+                    <span class="w-1 h-1 bg-yellow-500 rounded-full"></span>
+                    Breakeven Price (Avg)
+                </h3>
+                <div class="flex justify-center items-center bg-slate-950 p-6 rounded border border-slate-800">
+                    <span id="breakevenDisplay"
+                        class="text-4xl font-black text-yellow-500 font-mono tracking-tighter">---</span>
+                </div>
+            </div>
+
+            <button onclick="clearData()"
+                class="w-full py-4 rounded-xl bg-red-950/10 hover:bg-red-900/30 text-red-500/50 hover:text-red-400 text-[10px] uppercase tracking-widest font-bold border border-red-900/20 hover:border-red-500/30 transition-all">
+                Reset Workspace
+            </button>
+
+        </div>
+    </div>
+
+    <script>
+        /** * PROBER PRECISION ENGINE v2.0 */
+
+        // --- UTILS ---
+        function parseInput(val) {
+            if (typeof val === 'number') return val;
+            if (!val) return 0;
+            // Strip non-numeric except dot and minus
+            const clean = val.toString().replace(/[^0-9.-]/g, '');
+            return parseFloat(clean) || 0;
+        }
+
+        function formatCurrency(val) {
+            return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // --- 1. STATE MANAGEMENT ---
+        let bets = JSON.parse(localStorage.getItem('prober_bets')) || [];
+
+        let simInterval;
+        let isSimRunning = true;
+        let wsClient = null;
+
+        // --- 2. OPTICAL SNIPER LINK (WebSocket) ---
+        function connectToSniper() {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const priceInput = document.getElementById('currentPrice');
+
+            try {
+                wsClient = new WebSocket('ws://localhost:8765');
+
+                wsClient.onopen = function () {
+                    console.log("[Prober] Optical Link Established.");
+                    statusDot.classList.remove('bg-yellow-600', 'bg-red-500', 'animate-pulse');
+                    statusDot.classList.add('bg-blue-500', 'shadow-[0_0_10px_#3b82f6]');
+                    statusText.innerText = "Optical Feed: ACTIVE";
+                    statusText.classList.add('text-blue-400');
+                    priceInput.readOnly = true;
+                    priceInput.classList.add('cursor-not-allowed', 'opacity-80');
+                    isSimRunning = false;
+                    if (simInterval) clearInterval(simInterval);
+                };
+
+                wsClient.onmessage = function (event) {
+                    const price = parseInput(event.data);
+                    if (!isNaN(price) && price > 0) {
+                        priceInput.value = price.toFixed(2);
+                        priceInput.classList.remove('flash-update');
+                        void priceInput.offsetWidth; // trigger reflow
+                        priceInput.classList.add('flash-update');
+                        calculateAll();
+                    }
+                };
+
+                wsClient.onclose = function () {
+                    statusDot.classList.remove('bg-blue-500', 'shadow-[0_0_10px_#3b82f6]');
+                    statusDot.classList.add('bg-red-500');
+                    statusText.innerText = "Feed: DISCONNECTED (Manual)";
+                    statusText.classList.remove('text-blue-400');
+                    priceInput.readOnly = false;
+                    priceInput.classList.remove('cursor-not-allowed', 'opacity-80');
+                    setTimeout(connectToSniper, 5000);
+                };
+
+            } catch (e) {
+                console.log("WebSocket Init Failed");
+            }
+        }
+
+        // --- 3. SIMULATION FALLBACK ---
+        function startSimulation() {
+            if (wsClient && wsClient.readyState === WebSocket.OPEN) return;
+
+            if (simInterval) clearInterval(simInterval);
+            simInterval = setInterval(() => {
+                if (!isSimRunning) return;
+                const current = parseInput(document.getElementById('currentPrice').value) || 100.00;
+                const volatility = 0.05;
+                const direction = Math.random() > 0.5 ? 1 : -1;
+                const change = Math.random() * volatility * direction;
+                let newPrice = current + change;
+                if (newPrice < 0.01) newPrice = 0.01;
+
+                document.getElementById('currentPrice').value = newPrice.toFixed(2);
+                calculateAll();
+            }, 1000);
+        }
+
+        function toggleSim() {
+            if (wsClient && wsClient.readyState === WebSocket.OPEN) {
+                alert("Cannot toggle simulation while Optical Feed is active.");
+                return;
+            }
+            isSimRunning = !isSimRunning;
+            const statusText = document.getElementById('statusText');
+            statusText.innerText = isSimRunning ? "Mode: SIMULATED DATA" : "Mode: MANUAL INPUT";
+            if (isSimRunning) startSimulation();
+        }
+
+        // --- 4. CORE LOGIC ---
+
+        function addPosition() {
+            const price = parseInput(document.getElementById('newPrice').value);
+            const size = parseInput(document.getElementById('newSize').value);
+
+            if (!price || !size) return;
+
+            bets.push({ id: Date.now(), price, size });
+            saveAndRender();
+
+            document.getElementById('newPrice').value = '';
+            document.getElementById('newSize').value = '';
+            document.getElementById('newPrice').focus();
+        }
+
+        function removeBet(id) {
+            bets = bets.filter(b => b.id !== id);
+            saveAndRender();
+        }
+
+        function clearData() {
+            if (confirm("Confirm: Wipe all position data?")) {
+                bets = [];
+                saveAndRender();
+            }
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('prober_bets', JSON.stringify(bets));
+
+            const list = document.getElementById('positionsList');
+            list.innerHTML = '';
+
+            bets.forEach((b, idx) => {
+                const cost = b.price * b.size;
+                list.innerHTML += `
+                    <div class="grid grid-cols-12 gap-3 items-center bg-slate-800/50 p-3 rounded-lg border-l-2 border-blue-500 hover:bg-slate-800 transition-colors group">
+                        <div class="col-span-1 text-slate-500 font-mono text-[10px] font-bold group-hover:text-white">${idx + 1}</div>
+                        <div class="col-span-3 font-mono text-white text-xs font-bold">${formatCurrency(b.price)}</div>
+                        <div class="col-span-3 font-mono text-slate-300 text-xs">${b.size}</div>
+                        <div class="col-span-3 font-mono text-slate-400 text-[10px]">$${formatCurrency(cost)}</div>
+                        <div class="col-span-2 text-right">
+                            <button onclick="removeBet(${b.id})" class="text-red-500/50 hover:text-red-400 text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded hover:bg-red-950/30 transition">Kill</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('contractCount').innerText = bets.length > 0 ? `${bets.length} FILLS` : "EMPTY";
+            calculateAll();
+        }
+
+        function calculateAll() {
+            // Inputs
+            const currentPrice = parseInput(document.getElementById('currentPrice').value);
+
+            // 1. Calculate Weighted Averages
+            let totalCost = 0;
+            let totalQty = 0;
+
+            bets.forEach(b => {
+                totalCost += (b.price * b.size);
+                totalQty += b.size;
+            });
+
+            // WEIGHTED AVERAGE PRICE (Your True Breakeven)
+            const weightedAvgPrice = totalQty > 0 ? totalCost / totalQty : 0;
+
+            // 2. Metrics (Winning Gap)
+            // Winning Gap = Current Price - Weighted Avg
+            // If Gap is positive, you are winning.
+            let gap = currentPrice - weightedAvgPrice;
+
+            // Gap % (ROI) = (Gap / Cost Basis) * 100
+            let gapPercent = weightedAvgPrice > 0 ? (gap / weightedAvgPrice) * 100 : 0;
+
+            const totalCurrentCapital = totalQty * currentPrice;
+
+            // --- UI UPDATES ---
+            document.getElementById('totalContracts').innerText = totalQty;
+            document.getElementById('totalCapital').innerText = `$${formatCurrency(totalCost)}`;
+            document.getElementById('totalCurrentCapital').innerText = `$${formatCurrency(totalCurrentCapital)}`;
+            document.getElementById('breakevenDisplay').innerText = totalQty > 0 ? weightedAvgPrice.toFixed(2) : "---";
+
+            const scoreCard = document.getElementById('scoreCard');
+            const gapDisplay = document.getElementById('gapDisplay');
+            const gapPctDisplay = document.getElementById('gapPercent');
+            const statusBadge = document.getElementById('statusBadge');
+
+            if (totalQty === 0) {
+                // Idle State
+                gapDisplay.innerText = "0.00";
+                gapPctDisplay.innerText = "0.00%";
+                scoreCard.className = "bg-slate-900 p-8 rounded-xl border-l-4 border-slate-600 shadow-2xl relative overflow-hidden";
+                statusBadge.innerText = "NO POSITION";
+                statusBadge.className = "text-[9px] bg-slate-800 px-2 py-1 rounded text-slate-500 font-bold tracking-wider border border-slate-700";
+                gapDisplay.classList.remove('text-red-500', 'text-green-500', 'text-yellow-500');
+                gapDisplay.classList.add('text-white');
+            } else {
+                // Active State
+                gapDisplay.innerText = (gap > 0 ? "+" : "") + gap.toFixed(2);
+                gapPctDisplay.innerText = (gap > 0 ? "+" : "") + "" + `${gapPercent.toFixed(2)}%`;
+
+                scoreCard.classList.remove('animate-danger');
+
+                if (gap <= 0) {
+                    // DANGER (Loss)
+                    scoreCard.className = "bg-red-950/20 p-8 rounded-xl border-l-4 border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.1)] relative overflow-hidden animate-danger";
+                    gapDisplay.className = "text-6xl font-black text-red-500 tracking-tighter drop-shadow-[0_0_10px_rgba(220,38,38,0.5)]";
+                    gapPctDisplay.className = "text-xl font-mono text-red-400 font-bold";
+                    statusBadge.innerText = "UNDERWATER";
+                    statusBadge.className = "text-[9px] bg-red-900/50 px-2 py-1 rounded text-red-200 font-bold tracking-wider border border-red-500/50";
+                } else if (gapPercent < 2) {
+                    // WARNING (Tight Profit < 2%)
+                    scoreCard.className = "bg-yellow-950/20 p-8 rounded-xl border-l-4 border-yellow-500 shadow-xl relative overflow-hidden";
+                    gapDisplay.className = "text-6xl font-black text-yellow-500 tracking-tighter drop-shadow-lg";
+                    gapPctDisplay.className = "text-xl font-mono text-yellow-500 font-bold";
+                    statusBadge.innerText = "THIN MARGIN";
+                    statusBadge.className = "text-[9px] bg-yellow-900/50 px-2 py-1 rounded text-yellow-200 font-bold tracking-wider border border-yellow-500/50";
+                } else {
+                    // SAFE (Wide Profit)
+                    scoreCard.className = "bg-green-950/20 p-8 rounded-xl border-l-4 border-green-500 shadow-xl relative overflow-hidden";
+                    gapDisplay.className = "text-6xl font-black text-green-500 tracking-tighter drop-shadow-lg";
+                    gapPctDisplay.className = "text-xl font-mono text-green-500 font-bold";
+                    statusBadge.innerText = "IN PROFIT";
+                    statusBadge.className = "text-[9px] bg-green-900/50 px-2 py-1 rounded text-green-200 font-bold tracking-wider border border-green-500/50";
+                }
+            }
+
+            // 4. SANDBOX CALCULATIONS
+            const simP = parseInput(document.getElementById('simPrice').value);
+            const simQ = parseInput(document.getElementById('simSize').value);
+            const simBox = document.getElementById('simResultBox');
+            const blunderGuard = document.getElementById('blunderGuard');
+
+            if (simP && simQ) {
+                simBox.classList.remove('opacity-30');
+                simBox.classList.add('opacity-100');
+
+                const newTotalCost = totalCost + (simP * simQ);
+                const newTotalQty = totalQty + simQ;
+                const newAvg = newTotalCost / newTotalQty; // New BE
+                const newGap = currentPrice - newAvg;
+                const newGapPercent = newAvg > 0 ? (newGap / newAvg) * 100 : 0;
+
+                document.getElementById('simNewAvg').innerText = newAvg.toFixed(2);
+                const simGapEl = document.getElementById('simNewGap');
+                simGapEl.innerText = (newGap > 0 ? "+" : "") + newGap.toFixed(2);
+
+                // Coloring Sim Results
+                if (newGap <= 0) simGapEl.className = "font-mono font-bold text-red-400";
+                else simGapEl.className = "font-mono font-bold text-green-400";
+
+                // BLUNDER GUARD
+                if (newGap <= 0) {
+                    blunderGuard.classList.remove('hidden');
+                    document.getElementById('blunderMsg').innerText = "FATAL: This bet moves your Breakeven above current price.";
+                } else if (newGapPercent < 1 && newGapPercent > 0) {
+                    blunderGuard.classList.remove('hidden');
+                    document.getElementById('blunderMsg').innerText = `WARNING: Profit Margin drops to ${newGapPercent.toFixed(2)}%.`;
+                } else {
+                    blunderGuard.classList.add('hidden');
+                }
+
+            } else {
+                simBox.classList.add('opacity-30');
+                simBox.classList.remove('opacity-100');
+                blunderGuard.classList.add('hidden');
+            }
+        }
+
+        // --- INIT ---
+        window.addEventListener('load', () => {
+            saveAndRender();
+            connectToSniper();
+            if (isSimRunning && !wsClient) startSimulation();
+        });
+
+    </script>
+</body>
+
+</html>
