@@ -157,7 +157,7 @@ HTML_TEMPLATE = """
 
     <div class="sidebar" id="sidebar">
         <div class="header">
-            <span class="header-title">Market Data</span>
+            <span class="header-title">Root</span>
             <button class="close-btn" onclick="closeSidebar()">×</button>
         </div>
         <div class="nav-scroll">
