@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copper: The Backbone of Space Exploration</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #fdfaf6;
+        }
+
+        h1 {
+            color: #b87333;
+            text-align: center;
+            border-bottom: 2px solid #b87333;
+            padding-bottom: 10px;
+        }
+
+        .intro {
+            font-style: italic;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .module {
+            background: #fff;
+            border: 1px solid #e0d5c1;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .module-header {
+            background: #b87333;
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .module-header:hover {
+            background: #a05a2c;
+        }
+
+        .module-content {
+            display: none;
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+
+        .active .module-content {
+            display: block;
+        }
+
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Copper: The Backbone of Space Exploration</h1>
+    <p class="intro">From the first satellites to the future of Mars colonization, copper's unique properties make it an
+        unsung hero of the cosmos.</p>
+
+    <div class="module" onclick="this.classList.toggle('active')">
+        <div class="module-header">
+            <span>1. Electrical Connectivity: The Nervous System</span>
+            <span>+</span>
+        </div>
+        <div class="module-content">
+            <p>In the void of space, communication is survival. Copper’s exceptional electrical conductivity makes it
+                the gold standard for spacecraft wiring and circuitry. It facilitates the high-speed data transmission
+                required for autonomous navigation and maintains the integrity of signals sent across millions of miles
+                of vacuum back to Earth.</p>
+        </div>
+    </div>
+
+    <div class="module" onclick="this.classList.toggle('active')">
+        <div class="module-header">
+            <span>2. Thermal Management: The Heat Shield</span>
+            <span>+</span>
+        </div>
+        <div class="module-content">
+            <p>Spacecraft experience extreme temperature swings—from -250°F in shadow to +250°F in direct sunlight.
+                Copper's high thermal conductivity allows engineers to design sophisticated heat sinks and cold plates.
+                These components draw excess heat away from sensitive electronics and redistribute it, preventing system
+                meltdowns during critical mission phases.</p>
+        </div>
+    </div>
+
+    <div class="module" onclick="this.classList.toggle('active')">
+        <div class="module-header">
+            <span>3. Antimicrobial Properties: Keeping Astronauts Safe</span>
+            <span>+</span>
+        </div>
+        <div class="module-content">
+            <p>On the International Space Station (ISS), bacteria can behave unpredictably and pose significant health
+                risks to the crew. Copper is naturally antimicrobial. By incorporating copper alloys into high-touch
+                surfaces and water filtration systems, space agencies can drastically reduce the spread of pathogens in
+                the closed-loop environments of long-duration space flight.</p>
+        </div>
+    </div>
+
+    <div class="module" onclick="this.classList.toggle('active')">
+        <div class="module-header">
+            <span>4. Propulsion: The Heart of the Rocket</span>
+            <span>+</span>
+        </div>
+        <div class="module-content">
+            <p>Modern rocket engines, particularly those using liquid methane and oxygen, utilize copper-alloy
+                combustion chambers. Copper can withstand the immense thermal loads generated during combustion while
+                efficiently transferring heat to the fuel, which acts as a coolant (regenerative cooling). Without
+                copper's durability and conductivity, many of today’s reusable rocket engines would simply melt under
+                the pressure.</p>
+        </div>
+    </div>
+
+    <footer>
+        Click on each section to explore the vital role of Copper in the final frontier.
+    </footer>
+
+</body>
+
+</html>

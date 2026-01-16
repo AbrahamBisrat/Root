@@ -1,0 +1,222 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROOT | Institutional</title>
+    <style>
+        :root {
+            /* Institutional Theme (Bloomberg/Hermes) */
+            --bg-color: #121212;          
+            --sidebar-bg: #1a1a1a;        
+            --border-color: #333333;
+            --text-main: #e0e0e0;
+            --text-muted: #666666;
+            --accent-color: #ff9900;      
+            --hover-bg: #2a2a2a;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --sidebar-width: 260px;
+        }
+
+        body {
+            margin: 0; padding: 0; display: flex; height: 100vh; 
+            background-color: var(--bg-color); color: var(--text-main); 
+            font-family: var(--font-stack); overflow: hidden;
+        }
+
+        /* SIDEBAR CONTAINER */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column; flex-shrink: 0;
+            transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative;
+            white-space: nowrap;
+            overflow: hidden; 
+            z-index: 10;
+        }
+
+        /* COLLAPSED STATE (Completely Hidden) */
+        .sidebar.collapsed {
+            width: 0;
+            border-right: none;
+        }
+
+        /* Header Area */
+        .header {
+            padding: 20px; 
+            height: 40px; 
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-title { 
+            font-size: 0.9em; font-weight: 700; color: var(--accent-color); 
+            letter-spacing: 1px; text-transform: uppercase;
+        }
+
+        /* Navigation List */
+        .nav-scroll { 
+            flex: 1; overflow-y: auto; padding-bottom: 20px; 
+            opacity: 1; transition: opacity 0.2s;
+        }
+        
+        /* Hide nav content instantly when collapsing */
+        .sidebar.collapsed .nav-scroll, 
+        .sidebar.collapsed .header-title {
+            opacity: 0; pointer-events: none;
+        }
+
+        /* Categories */
+        .category-label {
+            padding: 20px 20px 8px 20px; font-size: 0.7em; font-weight: 600;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        /* Links */
+        .nav-link {
+            display: block; padding: 8px 20px; text-decoration: none;
+            color: var(--text-main); font-size: 0.85em; 
+            border-left: 3px solid transparent;
+            transition: all 0.2s; cursor: pointer;
+        }
+
+        .nav-link:hover { background-color: var(--hover-bg); color: #fff; }
+        
+        .nav-link.active {
+            background-color: var(--hover-bg); 
+            border-left: 3px solid var(--accent-color);
+            color: var(--accent-color);
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1; display: flex; flex-direction: column; background-color: var(--bg-color);
+            position: relative;
+        }
+
+        /* GHOST BURGER BUTTON */
+        /* Only visible when sidebar is closed */
+        .ghost-burger {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 100;
+            background: transparent;
+            border: none;
+            color: var(--accent-color);
+            font-size: 1.5em;
+            cursor: pointer;
+            
+            /* The user requirement: 20% visibility */
+            opacity: 0.2;
+            transition: opacity 0.3s ease;
+            
+            /* Hidden by default (sidebar starts open) */
+            display: none; 
+        }
+
+        .ghost-burger:hover {
+            opacity: 1.0;
+        }
+
+        /* Close Button inside header */
+        .close-btn { 
+            background: none; border: none; color: var(--text-muted); 
+            cursor: pointer; font-size: 1.2em; padding: 5px;
+            transition: color 0.2s;
+        }
+        .close-btn:hover { color: var(--accent-color); }
+
+        iframe { width: 100%; height: 100%; border: none; display: none; background: #fff; }
+
+        .placeholder {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; 
+            height: 100%; width: 100%;
+            color: var(--text-muted); 
+            font-family: var(--font-stack);
+        }
+        .placeholder h1 { font-size: 1.2em; font-weight: 400; letter-spacing: 2px; margin-bottom: 10px; color: #444; }
+        
+    </style>
+</head>
+<body>
+
+    <button id="ghost-burger" class="ghost-burger" onclick="openSidebar()">☰</button>
+
+    <div class="sidebar" id="sidebar">
+        <div class="header">
+            <span class="header-title">Market Data</span>
+            <button class="close-btn" onclick="closeSidebar()">×</button>
+        </div>
+        <div class="nav-scroll">
+            <div class='category-label'>Options</div>
+<a href='#data/options/vix.html' class='nav-link'>Vix</a>
+<div class='category-label'>Random</div>
+<a href='#data/random/copper.html' class='nav-link'>Copper</a>
+<div class='category-label'>Strategy</div>
+<a href='#data/strategy/titForTat.html' class='nav-link'>Titfortat</a>
+
+        </div>
+    </div>
+
+    <div class="main-content">
+        <iframe name="tool-frame" id="tool-frame"></iframe>
+        <div id="placeholder-text" class="placeholder">
+            <h1>NO FEED SELECTED</h1>
+        </div>
+    </div>
+
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const burger = document.getElementById('ghost-burger');
+        const iframe = document.getElementById('tool-frame');
+        const placeholder = document.getElementById('placeholder-text');
+        const links = document.querySelectorAll('.nav-link');
+
+        function closeSidebar() {
+            sidebar.classList.add('collapsed');
+            // Show burger after sidebar transition (approx)
+            setTimeout(() => {
+                burger.style.display = 'block';
+            }, 300);
+        }
+
+        function openSidebar() {
+            burger.style.display = 'none';
+            sidebar.classList.remove('collapsed');
+        }
+
+        // ROUTER LOGIC
+        function loadFromHash() {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                iframe.src = hash;
+                iframe.style.display = 'block';
+                placeholder.style.display = 'none';
+
+                // Highlight Link
+                links.forEach(link => {
+                    if (link.getAttribute('href') === '#' + hash) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            } else {
+                iframe.style.display = 'none';
+                placeholder.style.display = 'flex';
+                links.forEach(l => l.classList.remove('active'));
+            }
+        }
+
+        // Init
+        window.addEventListener('hashchange', loadFromHash);
+        window.addEventListener('load', loadFromHash);
+    </script>
+</body>
+</html>

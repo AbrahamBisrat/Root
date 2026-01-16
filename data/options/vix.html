@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIX Volatility Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 2rem;
+        }
+
+        .card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .info {
+            margin-top: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .info-box {
+            background: #334155;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #38bdf8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h1>CBOE Volatility Index (VIX) - 30 Day Simulation</h1>
+        <canvas id="vixChart"></canvas>
+
+        <div class="info">
+            <div class="info-box">
+                <strong>The "Fear Gauge"</strong><br>
+                The VIX measures the market's expectation of 30-day forward-looking volatility derived from S&P 500
+                index options. High values typically coincide with market stress.
+            </div>
+            <div class="info-box">
+                <strong>Mean Reversion</strong><br>
+                Unlike stock prices, the VIX is highly mean-reverting. It tends to spike during crises and settle back
+                to a baseline range of 12-20 during bull markets.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('vixChart').getContext('2d');
+
+        // Generate mock data mimicking VIX behavior
+        const labels = Array.from({ length: 30 }, (_, i) => `Day ${i + 1}`);
+        let currentVal = 18;
+        const dataPoints = labels.map(() => {
+            currentVal += (Math.random() - 0.45) * 3; // Slight upward bias for "shocks"
+            return Math.max(12, currentVal).toFixed(2);
+        });
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'VIX Level',
+                    data: dataPoints,
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#38bdf8',
+                        bodyColor: '#f8fafc',
+                        borderColor: '#334155',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    y: {
+                        grid: { color: '#334155' },
+                        ticks: { color: '#94a3b8' },
+                        suggestedMin: 10
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8' }
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>
