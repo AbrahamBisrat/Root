@@ -1,20 +1,24 @@
-name: Auto-Build Dashboard
+name: Build, Commit & Deploy
 
-# Trigger on pushes to main, but only if relevant files change
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
     paths:
       - 'data/**'
       - 'build.py'
+      - '.github/workflows/**'
 
-# Permissions required to commit back to the repo
+# CONFIGURATION CENTER
+env:
+  AWS_REGION: "us-east-1"                 # Change to your bucket's region
+  PYTHON_VERSION: "3.x"                   # Python version for the build script
+  COMMIT_MESSAGE: "chore: update index.html [skip ci]"
+
 permissions:
   contents: write
 
 jobs:
-  build-and-update:
+  build-and-deploy:
     runs-on: ubuntu-latest
     
     steps:
@@ -22,18 +26,41 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
-          
-      - name: Run Build Script
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Build Dashboard
         run: python build.py
-        
-      - name: Commit and Push if Changed
+
+      - name: Commit Artifacts
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "chore: auto-update index.html [skip ci]"
+          commit_message: ${{ env.COMMIT_MESSAGE }}
           file_pattern: index.html
           branch: main
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} \
+            --delete \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --exclude "build.py" \
+            --exclude "README.md" \
+            --exclude ".gitignore"
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_ID }} \
+            --paths "/*"
