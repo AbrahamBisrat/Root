@@ -183,15 +183,27 @@ HTML_TEMPLATE = """
         const placeholder = document.getElementById('placeholder-text');
         const links = document.querySelectorAll('.nav-link');
 
+        // --- PERSISTENCE LOGIC START ---
+        // 1. Check LocalStorage immediately on load
+        const savedState = localStorage.getItem('sidebarState');
+        
+        if (savedState === 'closed') {
+            sidebar.classList.add('collapsed');
+            burger.style.display = 'block'; // Show burger immediately without delay
+        }
+
         function closeSidebar() {
             sidebar.classList.add('collapsed');
             setTimeout(() => { burger.style.display = 'block'; }, 300);
+            localStorage.setItem('sidebarState', 'closed'); // Save state
         }
 
         function openSidebar() {
             burger.style.display = 'none';
             sidebar.classList.remove('collapsed');
+            localStorage.setItem('sidebarState', 'open'); // Save state
         }
+        // --- PERSISTENCE LOGIC END ---
 
         // ROUTER LOGIC
         function loadFromHash() {
@@ -219,7 +231,6 @@ HTML_TEMPLATE = """
                 iframe.style.display = 'block';
             } else if (hash.endsWith('.md')) {
                 mdView.style.display = 'block';
-                // Fetch and render MD
                 fetch(hash)
                     .then(response => {
                         if (!response.ok) throw new Error("Failed to load file");
