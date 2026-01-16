@@ -12,6 +12,7 @@ HTML_TEMPLATE = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ROOT | Institutional</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             /* Institutional Theme (Bloomberg/Hermes) */
@@ -46,15 +47,11 @@ HTML_TEMPLATE = """
         }
 
         /* COLLAPSED STATE (Completely Hidden) */
-        .sidebar.collapsed {
-            width: 0;
-            border-right: none;
-        }
+        .sidebar.collapsed { width: 0; border-right: none; }
 
         /* Header Area */
         .header {
-            padding: 20px; 
-            height: 40px; 
+            padding: 20px; height: 40px; 
             display: flex; align-items: center; justify-content: space-between;
             border-bottom: 1px solid var(--border-color);
         }
@@ -70,11 +67,8 @@ HTML_TEMPLATE = """
             opacity: 1; transition: opacity 0.2s;
         }
         
-        /* Hide nav content instantly when collapsing */
         .sidebar.collapsed .nav-scroll, 
-        .sidebar.collapsed .header-title {
-            opacity: 0; pointer-events: none;
-        }
+        .sidebar.collapsed .header-title { opacity: 0; pointer-events: none; }
 
         /* Categories */
         .category-label {
@@ -99,36 +93,28 @@ HTML_TEMPLATE = """
             font-weight: 500;
         }
 
+        /* Tag for file type */
+        .file-tag {
+            font-size: 0.7em; padding: 2px 4px; border-radius: 2px; 
+            margin-right: 8px; vertical-align: middle; opacity: 0.7;
+        }
+        .tag-html { background: #222; color: #569cd6; }
+        .tag-md { background: #222; color: #ce9178; }
+
         /* Main Content */
         .main-content {
             flex: 1; display: flex; flex-direction: column; background-color: var(--bg-color);
-            position: relative;
+            position: relative; overflow: hidden;
         }
 
         /* GHOST BURGER BUTTON */
-        /* Only visible when sidebar is closed */
         .ghost-burger {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            z-index: 100;
-            background: transparent;
-            border: none;
-            color: var(--accent-color);
-            font-size: 1.5em;
-            cursor: pointer;
-            
-            /* The user requirement: 20% visibility */
-            opacity: 0.2;
-            transition: opacity 0.3s ease;
-            
-            /* Hidden by default (sidebar starts open) */
-            display: none; 
+            position: absolute; top: 15px; left: 15px; z-index: 100;
+            background: transparent; border: none; color: var(--accent-color);
+            font-size: 1.5em; cursor: pointer; opacity: 0.2;
+            transition: opacity 0.3s ease; display: none; 
         }
-
-        .ghost-burger:hover {
-            opacity: 1.0;
-        }
+        .ghost-burger:hover { opacity: 1.0; }
 
         /* Close Button inside header */
         .close-btn { 
@@ -138,7 +124,21 @@ HTML_TEMPLATE = """
         }
         .close-btn:hover { color: var(--accent-color); }
 
+        /* VIEWS */
         iframe { width: 100%; height: 100%; border: none; display: none; background: #fff; }
+
+        /* Markdown Container */
+        #markdown-view {
+            display: none; padding: 40px; overflow-y: auto; height: 100%;
+            background-color: var(--bg-color); color: #ccc;
+            line-height: 1.6; max-width: 900px; margin: 0 auto; box-sizing: border-box;
+        }
+        /* Markdown internal styling to match theme */
+        #markdown-view h1, #markdown-view h2, #markdown-view h3 { color: var(--accent-color); margin-top: 1.5em; }
+        #markdown-view a { color: #4daafc; text-decoration: none; }
+        #markdown-view code { background: #222; padding: 2px 5px; border-radius: 3px; font-family: var(--font-stack); }
+        #markdown-view pre { background: #111; padding: 15px; border: 1px solid #333; overflow-x: auto; }
+        #markdown-view blockquote { border-left: 4px solid var(--accent-color); margin: 0; padding-left: 15px; color: var(--text-muted); }
 
         .placeholder {
             display: flex; flex-direction: column;
@@ -167,6 +167,9 @@ HTML_TEMPLATE = """
 
     <div class="main-content">
         <iframe name="tool-frame" id="tool-frame"></iframe>
+        
+        <div id="markdown-view"></div>
+
         <div id="placeholder-text" class="placeholder">
             <h1>NO FEED SELECTED</h1>
         </div>
@@ -176,15 +179,13 @@ HTML_TEMPLATE = """
         const sidebar = document.getElementById('sidebar');
         const burger = document.getElementById('ghost-burger');
         const iframe = document.getElementById('tool-frame');
+        const mdView = document.getElementById('markdown-view');
         const placeholder = document.getElementById('placeholder-text');
         const links = document.querySelectorAll('.nav-link');
 
         function closeSidebar() {
             sidebar.classList.add('collapsed');
-            // Show burger after sidebar transition (approx)
-            setTimeout(() => {
-                burger.style.display = 'block';
-            }, 300);
+            setTimeout(() => { burger.style.display = 'block'; }, 300);
         }
 
         function openSidebar() {
@@ -195,27 +196,44 @@ HTML_TEMPLATE = """
         // ROUTER LOGIC
         function loadFromHash() {
             const hash = window.location.hash.substring(1);
-            if (hash) {
+            
+            // Reset Views
+            iframe.style.display = 'none';
+            mdView.style.display = 'none';
+            placeholder.style.display = 'none';
+            links.forEach(l => l.classList.remove('active'));
+
+            if (!hash) {
+                placeholder.style.display = 'flex';
+                return;
+            }
+
+            // Highlight Link
+            links.forEach(link => {
+                if (link.getAttribute('href') === '#' + hash) link.classList.add('active');
+            });
+
+            // Handle content type
+            if (hash.endsWith('.html')) {
                 iframe.src = hash;
                 iframe.style.display = 'block';
-                placeholder.style.display = 'none';
-
-                // Highlight Link
-                links.forEach(link => {
-                    if (link.getAttribute('href') === '#' + hash) {
-                        link.classList.add('active');
-                    } else {
-                        link.classList.remove('active');
-                    }
-                });
-            } else {
-                iframe.style.display = 'none';
-                placeholder.style.display = 'flex';
-                links.forEach(l => l.classList.remove('active'));
+            } else if (hash.endsWith('.md')) {
+                mdView.style.display = 'block';
+                // Fetch and render MD
+                fetch(hash)
+                    .then(response => {
+                        if (!response.ok) throw new Error("Failed to load file");
+                        return response.text();
+                    })
+                    .then(text => {
+                        mdView.innerHTML = marked.parse(text);
+                    })
+                    .catch(err => {
+                        mdView.innerHTML = `<h2 style='color:red'>Error loading file</h2><p>${err.message}</p>`;
+                    });
             }
         }
 
-        // Init
         window.addEventListener('hashchange', loadFromHash);
         window.addEventListener('load', loadFromHash);
     </script>
@@ -236,9 +254,10 @@ def generate_sidebar_html(base_path):
         
         if any(part.startswith('.') for part in rel_path.split(os.sep)): continue
 
-        html_files = [f for f in files if f.endswith('.html')]
+        # Scan for both HTML and MD
+        valid_files = [f for f in files if f.endswith(('.html', '.md'))]
         
-        if html_files:
+        if valid_files:
             if rel_path == ".":
                 category_name = "General"
             else:
@@ -247,19 +266,24 @@ def generate_sidebar_html(base_path):
             
             html_output += f"<div class='category-label'>{category_name}</div>\n"
             
-            for file in html_files:
+            for file in valid_files:
                 file_path = os.path.join(DATA_DIR, rel_path, file) if rel_path != "." else os.path.join(DATA_DIR, file)
                 web_path = file_path.replace(os.sep, '/')
                 
-                raw_name = file.replace('.html', '').replace('_', ' ')
+                # Determine tag style
+                ext = file.split('.')[-1]
+                tag_class = f"tag-{ext}"
+                
+                raw_name = file.replace('.html', '').replace('.md', '').replace('_', ' ')
                 display_name = raw_name.title() 
                 
-                html_output += f"<a href='#{web_path}' class='nav-link'>{display_name}</a>\n"
+                # Added a tiny colored tag (HTML/MD) next to the name
+                html_output += f"<a href='#{web_path}' class='nav-link'><span class='file-tag {tag_class}'>{ext.upper()}</span>{display_name}</a>\n"
 
     return html_output
 
 def main():
-    print(f"--- Root Builder v1.4 (Ghost Burger) ---")
+    print(f"--- Root Builder v1.5 (MD Support) ---")
     sidebar_content = generate_sidebar_html(DATA_DIR)
     final_html = HTML_TEMPLATE.replace("{SIDEBAR_CONTENT}", sidebar_content)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
