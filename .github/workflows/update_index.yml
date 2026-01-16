@@ -1,0 +1,39 @@
+name: Auto-Build Dashboard
+
+# Trigger on pushes to main, but only if relevant files change
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'data/**'
+      - 'build.py'
+
+# Permissions required to commit back to the repo
+permissions:
+  contents: write
+
+jobs:
+  build-and-update:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          
+      - name: Run Build Script
+        run: python build.py
+        
+      - name: Commit and Push if Changed
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: auto-update index.html [skip ci]"
+          file_pattern: index.html
+          branch: main
