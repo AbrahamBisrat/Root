@@ -11,8 +11,9 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ROOT | Institutional</title>
+    <title>ROOT | Boiled Potato</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="icon" href="./img/logo.png">
     <style>
         :root {
             /* Institutional Theme (Bloomberg/Hermes) */
