@@ -1,29 +1,36 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ROOT | Institutional</title>
+    <title>ROOT | Boiled Potato</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="icon" href="./img/logo.png">
+
     <style>
         :root {
             /* Institutional Theme (Bloomberg/Hermes) */
-            --bg-color: #121212;          
-            --sidebar-bg: #1a1a1a;        
+            --bg-color: #121212;
+            --sidebar-bg: #1a1a1a;
             --border-color: #333333;
             --text-main: #e0e0e0;
             --text-muted: #666666;
-            --accent-color: #ff9900;      
+            --accent-color: #ff9900;
             --hover-bg: #2a2a2a;
             --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             --sidebar-width: 260px;
         }
 
         body {
-            margin: 0; padding: 0; display: flex; height: 100vh; 
-            background-color: var(--bg-color); color: var(--text-main); 
-            font-family: var(--font-stack); overflow: hidden;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-stack);
+            overflow: hidden;
         }
 
         /* SIDEBAR CONTAINER */
@@ -31,56 +38,84 @@
             width: var(--sidebar-width);
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
-            display: flex; flex-direction: column; flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
             transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
             position: relative;
             white-space: nowrap;
-            overflow: hidden; 
+            overflow: hidden;
             z-index: 10;
         }
 
         /* COLLAPSED STATE (Completely Hidden) */
-        .sidebar.collapsed { width: 0; border-right: none; }
+        .sidebar.collapsed {
+            width: 0;
+            border-right: none;
+        }
 
         /* Header Area */
         .header {
-            padding: 20px; height: 40px; 
-            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             border-bottom: 1px solid var(--border-color);
         }
 
-        .header-title { 
-            font-size: 0.9em; font-weight: 700; color: var(--accent-color); 
-            letter-spacing: 1px; text-transform: uppercase;
+        .header-title {
+            font-size: 0.9em;
+            font-weight: 700;
+            color: var(--accent-color);
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
         /* Navigation List */
-        .nav-scroll { 
-            flex: 1; overflow-y: auto; padding-bottom: 20px; 
-            opacity: 1; transition: opacity 0.2s;
+        .nav-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 20px;
+            opacity: 1;
+            transition: opacity 0.2s;
         }
-        
-        .sidebar.collapsed .nav-scroll, 
-        .sidebar.collapsed .header-title { opacity: 0; pointer-events: none; }
+
+        .sidebar.collapsed .nav-scroll,
+        .sidebar.collapsed .header-title {
+            opacity: 0;
+            pointer-events: none;
+        }
 
         /* Categories */
         .category-label {
-            padding: 20px 20px 8px 20px; font-size: 0.7em; font-weight: 600;
-            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+            padding: 20px 20px 8px 20px;
+            font-size: 0.7em;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         /* Links */
         .nav-link {
-            display: block; padding: 8px 20px; text-decoration: none;
-            color: var(--text-main); font-size: 0.85em; 
+            display: block;
+            padding: 8px 20px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-size: 0.85em;
             border-left: 3px solid transparent;
-            transition: all 0.2s; cursor: pointer;
+            transition: all 0.2s;
+            cursor: pointer;
         }
 
-        .nav-link:hover { background-color: var(--hover-bg); color: #fff; }
-        
+        .nav-link:hover {
+            background-color: var(--hover-bg);
+            color: #fff;
+        }
+
         .nav-link.active {
-            background-color: var(--hover-bg); 
+            background-color: var(--hover-bg);
             border-left: 3px solid var(--accent-color);
             color: var(--accent-color);
             font-weight: 500;
@@ -88,62 +123,147 @@
 
         /* Tag for file type */
         .file-tag {
-            font-size: 0.7em; padding: 2px 4px; border-radius: 2px; 
-            margin-right: 8px; vertical-align: middle; opacity: 0.7;
+            font-size: 0.7em;
+            padding: 2px 4px;
+            border-radius: 2px;
+            margin-right: 8px;
+            vertical-align: middle;
+            opacity: 0.7;
         }
-        .tag-html { background: #222; color: #569cd6; }
-        .tag-md { background: #222; color: #ce9178; }
+
+        .tag-html {
+            background: #222;
+            color: #569cd6;
+        }
+
+        .tag-md {
+            background: #222;
+            color: #ce9178;
+        }
 
         /* Main Content */
         .main-content {
-            flex: 1; display: flex; flex-direction: column; background-color: var(--bg-color);
-            position: relative; overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-color);
+            position: relative;
+            overflow: hidden;
         }
 
         /* GHOST BURGER BUTTON */
         .ghost-burger {
-            position: absolute; top: 15px; left: 15px; z-index: 100;
-            background: transparent; border: none; color: var(--accent-color);
-            font-size: 1.5em; cursor: pointer; opacity: 0.2;
-            transition: opacity 0.3s ease; display: none; 
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 100;
+            background: transparent;
+            border: none;
+            color: var(--accent-color);
+            font-size: 1.5em;
+            cursor: pointer;
+            opacity: 0.2;
+            transition: opacity 0.3s ease;
+            display: none;
         }
-        .ghost-burger:hover { opacity: 1.0; }
+
+        .ghost-burger:hover {
+            opacity: 1.0;
+        }
 
         /* Close Button inside header */
-        .close-btn { 
-            background: none; border: none; color: var(--text-muted); 
-            cursor: pointer; font-size: 1.2em; padding: 5px;
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 5px;
             transition: color 0.2s;
         }
-        .close-btn:hover { color: var(--accent-color); }
+
+        .close-btn:hover {
+            color: var(--accent-color);
+        }
 
         /* VIEWS */
-        iframe { width: 100%; height: 100%; border: none; display: none; background: #fff; }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+            background: #fff;
+        }
 
         /* Markdown Container */
         #markdown-view {
-            display: none; padding: 40px; overflow-y: auto; height: 100%;
-            background-color: var(--bg-color); color: #ccc;
-            line-height: 1.6; max-width: 900px; margin: 0 auto; box-sizing: border-box;
+            display: none;
+            padding: 40px;
+            overflow-y: auto;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: #ccc;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            box-sizing: border-box;
         }
-        /* Markdown internal styling to match theme */
-        #markdown-view h1, #markdown-view h2, #markdown-view h3 { color: var(--accent-color); margin-top: 1.5em; }
-        #markdown-view a { color: #4daafc; text-decoration: none; }
-        #markdown-view code { background: #222; padding: 2px 5px; border-radius: 3px; font-family: var(--font-stack); }
-        #markdown-view pre { background: #111; padding: 15px; border: 1px solid #333; overflow-x: auto; }
-        #markdown-view blockquote { border-left: 4px solid var(--accent-color); margin: 0; padding-left: 15px; color: var(--text-muted); }
 
-        .placeholder {
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center; 
-            height: 100%; width: 100%;
-            color: var(--text-muted); 
+        /* Markdown internal styling to match theme */
+        #markdown-view h1,
+        #markdown-view h2,
+        #markdown-view h3 {
+            color: var(--accent-color);
+            margin-top: 1.5em;
+        }
+
+        #markdown-view a {
+            color: #4daafc;
+            text-decoration: none;
+        }
+
+        #markdown-view code {
+            background: #222;
+            padding: 2px 5px;
+            border-radius: 3px;
             font-family: var(--font-stack);
         }
-        .placeholder h1 { font-size: 1.2em; font-weight: 400; letter-spacing: 2px; margin-bottom: 10px; color: #444; }
-        
+
+        #markdown-view pre {
+            background: #111;
+            padding: 15px;
+            border: 1px solid #333;
+            overflow-x: auto;
+        }
+
+        #markdown-view blockquote {
+            border-left: 4px solid var(--accent-color);
+            margin: 0;
+            padding-left: 15px;
+            color: var(--text-muted);
+        }
+
+        .placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            color: var(--text-muted);
+            font-family: var(--font-stack);
+        }
+
+        .placeholder h1 {
+            font-size: 1.2em;
+            font-weight: 400;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            color: #444;
+        }
     </style>
 </head>
+
 <body>
 
     <button id="ghost-burger" class="ghost-burger" onclick="openSidebar()">☰</button>
@@ -155,22 +275,23 @@
         </div>
         <div class="nav-scroll">
             <div class='category-label'>Curiosity</div>
-<a href='#data/Curiosity/ATR.md' class='nav-link'><span class='file-tag tag-md'>MD</span>Atr</a>
-<div class='category-label'>Prober</div>
-<a href='#data/Prober/prober.html' class='nav-link'><span class='file-tag tag-html'>HTML</span>Prober</a>
-<div class='category-label'>Options</div>
-<a href='#data/options/vix.html' class='nav-link'><span class='file-tag tag-html'>HTML</span>Vix</a>
-<div class='category-label'>Random</div>
-<a href='#data/random/poker.html' class='nav-link'><span class='file-tag tag-html'>HTML</span>Poker</a>
-<div class='category-label'>Strategy</div>
-<a href='#data/strategy/titForTat.html' class='nav-link'><span class='file-tag tag-html'>HTML</span>Titfortat</a>
+            <a href='#data/Curiosity/ATR.md' class='nav-link'><span class='file-tag tag-md'>MD</span>Atr</a>
+            <div class='category-label'>Prober</div>
+            <a href='#data/Prober/prober.html' class='nav-link'><span class='file-tag tag-html'>HTML</span>Prober</a>
+            <div class='category-label'>Options</div>
+            <a href='#data/options/vix.html' class='nav-link'><span class='file-tag tag-html'>HTML</span>Vix</a>
+            <div class='category-label'>Random</div>
+            <a href='#data/random/poker.html' class='nav-link'><span class='file-tag tag-html'>HTML</span>Poker</a>
+            <div class='category-label'>Strategy</div>
+            <a href='#data/strategy/titForTat.html' class='nav-link'><span
+                    class='file-tag tag-html'>HTML</span>Titfortat</a>
 
         </div>
     </div>
 
     <div class="main-content">
         <iframe name="tool-frame" id="tool-frame"></iframe>
-        
+
         <div id="markdown-view"></div>
 
         <div id="placeholder-text" class="placeholder">
@@ -189,7 +310,7 @@
         // --- PERSISTENCE LOGIC START ---
         // 1. Check LocalStorage immediately on load
         const savedState = localStorage.getItem('sidebarState');
-        
+
         if (savedState === 'closed') {
             sidebar.classList.add('collapsed');
             burger.style.display = 'block'; // Show burger immediately without delay
@@ -211,7 +332,7 @@
         // ROUTER LOGIC
         function loadFromHash() {
             const hash = window.location.hash.substring(1);
-            
+
             // Reset Views
             iframe.style.display = 'none';
             mdView.style.display = 'none';
@@ -252,4 +373,5 @@
         window.addEventListener('load', loadFromHash);
     </script>
 </body>
+
 </html>
