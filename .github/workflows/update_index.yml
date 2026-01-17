@@ -3,10 +3,10 @@ name: Build, Commit & Deploy
 on:
   push:
     branches: ["main"]
-    paths:
-      - 'data/**'
-      - 'build.py'
-      - '.github/workflows/**'
+    # paths:
+    #   - 'data/**'
+    #   - 'build.py'
+    #   - '.github/workflows/**'
 
 # CONFIGURATION CENTER
 env:
