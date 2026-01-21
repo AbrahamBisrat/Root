@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fidelity Margin Masterclass</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        fidelityGreen: '#12803b',
+                        fidelityDark: '#0b4d24',
+                        alertRed: '#d92d20',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .card {
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body class="text-slate-800">
+
+    <header class="bg-slate-900 text-white py-12 px-6 shadow-lg">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Fidelity Margin Masterclass</h1>
+            <p class="text-xl text-slate-300 font-light">Understanding your balances, buying power, and safety buffers
+                once and for all.</p>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-6 py-10 space-y-16">
+
+        <section class="bg-white rounded-xl shadow-md p-8 border-l-8 border-fidelityGreen">
+            <h2 class="text-2xl font-bold mb-4 text-slate-800">Buying Power Estimator</h2>
+            <p class="text-slate-600 mb-6">Enter your cash/equity amount to see your theoretical limits.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Total Cash / Equity ($)</label>
+                    <input type="number" id="equityInput" placeholder="e.g. 25000"
+                        class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-fidelityGreen focus:outline-none text-lg"
+                        oninput="calculateMargin()">
+                </div>
+                <div class="space-y-3 bg-slate-50 p-4 rounded-lg">
+                    <div class="flex justify-between">
+                        <span class="text-slate-600">Overnight Power (2x):</span>
+                        <span class="font-bold text-fidelityGreen" id="overnightResult">$0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-600">Day Trade Power (4x):</span>
+                        <span class="font-bold text-fidelityDark" id="intradayResult">$0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">1
+                </div>
+                <h2 class="text-2xl font-bold">What You Own (Equity)</h2>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="text-lg font-bold text-slate-900 mb-2">Margin Equity</h3>
+                <p class="text-slate-600 mb-3">
+                    <span class="font-mono bg-slate-100 px-2 py-1 rounded text-sm">Total Securities Value - Margin
+                        Debt</span>
+                </p>
+                <p class="text-sm leading-relaxed">This is your true liquidation value. If you sold every stock you own
+                    and paid off your margin loan immediately, this is the cash that would land in your pocket.</p>
+            </div>
+        </section>
+
+        <section>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">2
+                </div>
+                <h2 class="text-2xl font-bold">Spending Power</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Non-Margin Buying Power</h3>
+                    <p class="text-slate-600 text-sm mb-4">Essentially your "Cash on Hand".</p>
+                    <p class="text-sm text-slate-500">The amount of securities you can buy without borrowing a single
+                        cent. Using this does not accrue interest.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Avail. Without Margin Impact</h3>
+                    <p class="text-slate-600 text-sm mb-4">Liquidity without new debt.</p>
+                    <p class="text-sm text-slate-500">The maximum amount you can buy without creating a NEW margin debit
+                        balance. If you stay under this, you are trading with your own money.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-xl shadow-sm border border-slate-200 ring-1 ring-emerald-100">
+                    <h3 class="text-lg font-bold text-emerald-800 mb-2">Margin Buying Power</h3>
+                    <p class="text-slate-600 text-sm mb-4">Standard Limit (2x Equity)</p>
+                    <p class="text-sm text-slate-500">The maximum amount you can buy and hold
+                        <strong>overnight</strong>. Under Reg T, you can borrow 50% of the purchase price.
+                    </p>
+                </div>
+                <div class="card bg-white p-6 rounded-xl shadow-sm border border-slate-200 ring-1 ring-emerald-100">
+                    <h3 class="text-lg font-bold text-emerald-800 mb-2">Intraday Buying Power</h3>
+                    <p class="text-slate-600 text-sm mb-4">Day Trading Limit (4x Equity)</p>
+                    <p class="text-sm text-slate-500">Only for Pattern Day Traders. You <strong>must</strong> close
+                        these positions before market close. Holding 4x leverage overnight triggers an immediate call.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">3
+                </div>
+                <h2 class="text-2xl font-bold">Safety Buffers</h2>
+            </div>
+
+            <div class="bg-indigo-50 border border-indigo-100 p-6 rounded-xl mb-6">
+                <h3 class="text-lg font-bold text-indigo-900 mb-2">Net SMA (Special Memorandum Account)</h3>
+                <p class="text-indigo-800 text-sm mb-3 font-semibold">The "Line of Credit" that locks in gains.</p>
+                <p class="text-sm text-indigo-700 leading-relaxed">
+                    SMA is a bookkeeping entry, not cash. If your stock goes up, your SMA goes up. Crucially, <strong>if
+                        the stock drops later, SMA does NOT drop.</strong> It preserves your buying power based on your
+                    account's high-water mark.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Net House Surplus</h3>
+                    <p class="text-sm text-slate-500">
+                        <span class="font-semibold">Equity - Fidelity Requirements.</span><br>
+                        Fidelity is stricter than the government. If this number is positive, you are safe. If negative,
+                        Fidelity can liquidate assets immediately.
+                    </p>
+                </div>
+                <div class="card bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Net Exchange Surplus</h3>
+                    <p class="text-sm text-slate-500">
+                        <span class="font-semibold">Equity - NYSE Requirements (25%).</span><br>
+                        The absolute minimum equity required by the stock exchange. Usually lower than the House
+                        Surplus.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2 text-alertRed">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                The Danger Zone: Margin Calls
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse rounded-lg overflow-hidden shadow-sm">
+                    <thead>
+                        <tr class="bg-red-50 text-red-900">
+                            <th class="p-4 font-semibold text-sm">Call Type</th>
+                            <th class="p-4 font-semibold text-sm">The Trigger</th>
+                            <th class="p-4 font-semibold text-sm">The Consequence</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        <tr>
+                            <td class="p-4 font-medium text-slate-800">Fed Call (Reg T)</td>
+                            <td class="p-4 text-slate-600 text-sm">Buying more than 50% on margin in a single trade.
+                            </td>
+                            <td class="p-4 text-slate-600 text-sm">Deposit cash or sell securities within T+2 days.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-medium text-slate-800">House Call</td>
+                            <td class="p-4 text-slate-600 text-sm">Equity drops below Fidelity's % requirement (30-35%).
+                            </td>
+                            <td class="p-4 text-red-600 text-sm font-semibold">Immediate liquidation possible without
+                                notice.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-medium text-slate-800">Day Trade Call</td>
+                            <td class="p-4 text-slate-600 text-sm">Exceeding Intraday Power (4x).</td>
+                            <td class="p-4 text-slate-600 text-sm">Restricted to 2x buying power until shortfall is
+                                covered.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-10 text-slate-400 text-sm">
+        <p>&copy; 2026 root.abisrat.com | Information for educational purposes only.</p>
+    </footer>
+
+    <script>
+        function calculateMargin() {
+            const input = document.getElementById('equityInput').value;
+            const cash = parseFloat(input);
+
+            if (isNaN(cash) || cash < 0) {
+                document.getElementById('overnightResult').innerText = "$0";
+                document.getElementById('intradayResult').innerText = "$0";
+                return;
+            }
+
+            // Overnight is typically 2x for marginable securities
+            const overnight = cash * 2;
+
+            // Intraday is typically 4x for Pattern Day Traders
+            const intraday = cash * 4;
+
+            // Formatting
+            const formatter = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0
+            });
+
+            document.getElementById('overnightResult').innerText = formatter.format(overnight);
+            document.getElementById('intradayResult').innerText = formatter.format(intraday);
+        }
+    </script>
+</body>
+
+</html>
