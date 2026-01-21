@@ -524,6 +524,7 @@
                     <option value="momentum">Momentum Breakout</option>
                     <option value="vshape">V-Shape Reversal</option>
                     <option value="random">Pure Random Walk</option>
+                    <option value="runner">🏃 RUNNER MODE (Practice Holding)</option>
                 </select>
             </div>
             <div class="setting-group">
@@ -828,6 +829,16 @@
                         strategicMove = 0;
                         break;
 
+                    case 'runner':
+                        // RUNNER MODE: Drifts UP but has violent pullbacks
+                        // Base positive drift, occasional sharp drops (shakeouts)
+                        if (Math.random() < 0.05) { // 5% chance of violent drop
+                            strategicMove = -2.0;
+                        } else {
+                            strategicMove = 0.08; // Stronger upward drift
+                        }
+                        break;
+
                     case 'drift':
                     default:
                         // Classic Drift (original behavior)
@@ -922,21 +933,46 @@
             elAccountPnl.classList.add(pnl >= 0 ? 'profit' : 'loss');
 
             // Grading
-            if (pnl < 0) {
-                const hes = state.firstRedTime ? Date.now() - state.firstRedTime : 0;
-                stats.reps++;
-                stats.validCuts++;
-                stats.totalReact += hes;
+            if (CONF.strategy === 'runner') {
+                const targetPoints = 10;
+                const targetProfit = targetPoints * CONF.pointValue;
 
-                const avg = Math.round(stats.totalReact / stats.validCuts);
-                document.getElementById('avgReact').innerText = avg;
-                document.getElementById('repCount').innerText = stats.reps;
+                if (pnl >= targetProfit) {
+                    // Success: Diamond Hands
+                    elMsg.innerHTML = `🏆 DIAMOND HANDS!<br>+$${pnl.toFixed(2)}`;
+                    elMsg.style.color = "#00e676"; // Green
+                    stats.reps++;
+                    // Ideally track 'runners held' separate from valid cuts, but simplified:
+                    document.getElementById('repCount').innerText = stats.reps;
+                } else if (pnl > 0) {
+                    // Fail: Weak Hands
+                    elMsg.innerText = "🐔 WEAK HANDS! Too Early.";
+                    elMsg.style.color = "#ffad33"; // Orange
+                } else {
+                    // Loss Cut (Standard)
+                    elMsg.innerText = `STOPPED OUT: $${pnl.toFixed(2)}`;
+                    elMsg.style.color = "#ff4569"; // Red
+                }
+            }
+            else {
+                // STANDARD DRILL (Loss Cutting)
+                if (pnl < 0) {
+                    const hes = state.firstRedTime ? Date.now() - state.firstRedTime : 0;
+                    stats.reps++;
+                    stats.validCuts++;
+                    stats.totalReact += hes;
 
-                elMsg.innerText = `CUT: $${pnl.toFixed(2)} (${hes}ms)`;
-                elMsg.style.color = "#fff";
-            } else {
-                elMsg.innerText = "PROFIT TAKEN (DRILL FAILED)";
-                elMsg.style.color = "#555";
+                    const avg = Math.round(stats.totalReact / stats.validCuts);
+                    document.getElementById('avgReact').innerText = avg;
+                    document.getElementById('repCount').innerText = stats.reps;
+
+                    elMsg.innerText = `CUT: $${pnl.toFixed(2)} (${hes}ms)`;
+                    elMsg.style.color = "#fff";
+                } else {
+                    elMsg.innerText = "PROFIT TAKEN (DRILL FAILED)";
+                    elMsg.style.color = "#555";
+                    elMsg.style.textShadow = "none";
+                }
             }
             elMsg.style.display = 'block';
 
