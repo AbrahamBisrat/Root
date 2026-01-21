@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index Drill | Root</title>
+    <style>
+        :root {
+            --bg-color: #0b0e11;
+            --panel-color: #161a1f;
+            --text-color: #d1d4dc;
+            --green: #00e396;
+            --red: #ff0033;
+            --grid-color: #23262f;
+            --danger-bg: #2a0a0f;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            user-select: none;
+            overflow: hidden;
+            transition: background-color 0.2s;
+        }
+
+        body.danger-mode {
+            background-color: var(--danger-bg);
+        }
+
+        .container {
+            display: grid;
+            grid-template-rows: auto 1fr auto auto;
+            width: 800px;
+            height: 90vh;
+            background-color: var(--panel-color);
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            overflow: hidden;
+        }
+
+        /* HEADER & STATS */
+        .header {
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--grid-color);
+            background: #1b1f26;
+        }
+
+        .title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #666;
+            letter-spacing: 1px;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+        }
+
+        .stat-item b {
+            color: #fff;
+            margin-left: 5px;
+        }
+
+        /* CHART AREA */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #13161c;
+            cursor: crosshair;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* OVERLAYS */
+        .pnl-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 3rem;
+            font-weight: 700;
+            font-feature-settings: "tnum";
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        .pnl-green {
+            color: var(--green);
+        }
+
+        .pnl-red {
+            color: var(--red);
+        }
+
+        .msg-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #555;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* CONTROLS */
+        .controls {
+            padding: 0;
+            border-top: 1px solid var(--grid-color);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            background: #0a0c10;
+            height: 80px;
+        }
+
+        button {
+            border: none;
+            padding: 0;
+            font-size: 1.1rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.15s ease;
+            letter-spacing: 1.5px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .btn-label {
+            font-size: 1.1rem;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+        }
+
+        .btn-pnl {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* THINKORSWIM STYLE BUTTONS */
+        .btn-buy {
+            background: linear-gradient(180deg, #00e676 0%, #00c853 100%);
+            color: #000;
+            border-right: 1px solid #0a0c10;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-buy:hover {
+            background: linear-gradient(180deg, #00ff88 0%, #00e676 100%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 20px rgba(0, 230, 118, 0.3);
+        }
+
+        .btn-buy:active {
+            background: linear-gradient(180deg, #00c853 0%, #00a040 100%);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-cut {
+            background: linear-gradient(180deg, #4a4a4a 0%, #2d2d2d 100%);
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        /* ACTIVE STATE - SELL/FLATTEN */
+        .active .btn-cut {
+            background: linear-gradient(180deg, #ff1744 0%, #d50000 100%);
+            color: #fff;
+            cursor: pointer;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 25px rgba(255, 23, 68, 0.4);
+            animation: pulse-sell 1.2s ease-in-out infinite;
+        }
+
+        .active .btn-cut:hover {
+            background: linear-gradient(180deg, #ff4569 0%, #ff1744 100%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 30px rgba(255, 23, 68, 0.6);
+        }
+
+        .active .btn-cut:active {
+            background: linear-gradient(180deg, #d50000 0%, #b20000 100%);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .active .btn-buy {
+            opacity: 0.3;
+            pointer-events: none;
+            filter: grayscale(0.5);
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse-sell {
+
+            0%,
+            100% {
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 20px rgba(255, 23, 68, 0.3);
+            }
+
+            50% {
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 35px rgba(255, 23, 68, 0.6);
+            }
+        }
+
+        /* HESITATION BAR */
+        .hesitation-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: var(--red);
+            width: 0%;
+            transition: width 0.05s linear;
+            z-index: 20;
+        }
+
+        /* SETTINGS PANEL */
+        .settings-panel {
+            padding: 15px 20px;
+            background: #0f1216;
+            border-bottom: 1px solid var(--grid-color);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            font-size: 0.8rem;
+            position: relative;
+            z-index: 5;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .setting-label {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .setting-value {
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: #2a2d35;
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent-color);
+            cursor: pointer;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #ffad33;
+            transform: scale(1.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: var(--accent-color);
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+        }
+
+        select {
+            background: #2a2d35;
+            color: var(--text-color);
+            border: 1px solid #444;
+            padding: 8px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+            position: relative;
+            z-index: 10;
+        }
+
+        select:hover {
+            border-color: var(--accent-color);
+            background: #333640;
+        }
+
+        select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.2);
+        }
+
+        option {
+            background: #1a1d24;
+            color: var(--text-color);
+            padding: 8px;
+        }
+
+        .toggle-settings {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            transition: color 0.2s;
+        }
+
+        .toggle-settings:hover {
+            color: var(--accent-color);
+        }
+
+        .settings-panel.hidden {
+            display: none;
+        }
+
+        /* TRAINING MODE */
+        .training-tooltip {
+            position: absolute;
+            background: linear-gradient(135deg, #ff9900, #ff6600);
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(255, 153, 0, 0.4);
+            z-index: 100;
+            pointer-events: none;
+            animation: float 2s ease-in-out infinite;
+            max-width: 250px;
+            line-height: 1.4;
+        }
+
+        .training-tooltip::after {
+            content: '';
+            position: absolute;
+            border: 8px solid transparent;
+        }
+
+        .training-tooltip.top::after {
+            bottom: -16px;
+            left: 20px;
+            border-top-color: #ff6600;
+        }
+
+        .training-tooltip.bottom::after {
+            top: -16px;
+            left: 20px;
+            border-bottom-color: #ff9900;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .training-highlight {
+            animation: pulse-highlight 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-highlight {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 rgba(255, 153, 0, 0);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(255, 153, 0, 0.8);
+            }
+        }
+
+        .training-mode-toggle {
+            background: linear-gradient(135deg, #ff9900, #ff6600);
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .training-mode-toggle:hover {
+            background: linear-gradient(135deg, #ffad33, #ff8533);
+        }
+
+        .training-mode-toggle.active {
+            background: #2b2e36;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container" id="app">
+        <div class="header">
+            <div class="title">MARKET SIMULATOR // ES_FUTURES</div>
+            <div class="stats-bar">
+                <div class="stat-item">AVG REACTION: <b id="avgReact">--</b> ms</div>
+                <div class="stat-item">REPS: <b id="repCount">0</b>/10</div>
+                <button class="training-mode-toggle" id="trainingToggle" onclick="toggleTrainingMode()">🎓 TRAINING
+                    MODE</button>
+                <button class="toggle-settings" onclick="toggleSettings()">⚙️ SETTINGS</button>
+            </div>
+        </div>
+
+        <div class="chart-container" id="chartContainer">
+            <canvas id="chart"></canvas>
+            <div class="pnl-overlay pnl-neutral" id="pnlDisplay">$0.00</div>
+            <div class="msg-overlay" id="centerMsg">PRESS ENTER TO START</div>
+            <div class="hesitation-bar" id="hesitationBar"></div>
+            <!-- Training tooltips will be inserted here dynamically -->
+        </div>
+
+        <div class="controls">
+            <button class="btn-buy" id="btnBuy" onclick="startTrade()">
+                <span class="btn-label">ENTER</span>
+                <span class="btn-pnl" id="buyPnl">Return ⏎</span>
+            </button>
+            <button class="btn-cut" id="btnCut" onclick="cutTrade()">
+                <span class="btn-label">FLATTEN</span>
+                <span class="btn-pnl" id="cutPnl">Space ␣</span>
+            </button>
+        </div>
+
+        <div class="settings-panel hidden" id="settingsPanel">
+            <div class="setting-group">
+                <div class="setting-label">
+                    <span>Market Strategy</span>
+                </div>
+                <select id="strategySelect">
+                    <option value="drift">Constant Drift (Default)</option>
+                    <option value="stophunt">Stop Hunt</option>
+                    <option value="shakeout">Shakeout & Reversal</option>
+                    <option value="beartrap">Bear Trap</option>
+                    <option value="bulltrap">Bull Trap</option>
+                    <option value="choppy">Choppy Ranging</option>
+                    <option value="momentum">Momentum Breakout</option>
+                    <option value="vshape">V-Shape Reversal</option>
+                    <option value="random">Pure Random Walk</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <div class="setting-label">
+                    <span>Drift Strength</span>
+                    <span class="setting-value" id="driftVal">-0.08</span>
+                </div>
+                <input type="range" id="driftSlider" min="-0.2" max="0.1" step="0.01" value="-0.08">
+            </div>
+            <div class="setting-group">
+                <div class="setting-label">
+                    <span>Volatility</span>
+                    <span class="setting-value" id="volVal">0.40</span>
+                </div>
+                <input type="range" id="volSlider" min="0.1" max="1.5" step="0.05" value="0.4">
+            </div>
+            <div class="setting-group">
+                <div class="setting-label">
+                    <span>Speed (ms/tick)</span>
+                    <span class="setting-value" id="speedVal">50</span>
+                </div>
+                <input type="range" id="speedSlider" min="20" max="200" step="10" value="50">
+            </div>
+            <div class="setting-group">
+                <div class="setting-label">
+                    <span>Point Value ($)</span>
+                    <span class="setting-value" id="pointVal">50</span>
+                </div>
+                <input type="range" id="pointSlider" min="10" max="100" step="5" value="50">
+            </div>
+            <div class="setting-group">
+                <div class="setting-label">
+                    <span>Initial Capital ($)</span>
+                    <span class="setting-value" id="capitalVal">10000</span>
+                </div>
+                <input type="range" id="capitalSlider" min="1000" max="50000" step="1000" value="10000">
+            </div>
+            <div class="setting-group">
+                <div class="setting-label">
+                    <span>Max Loss Alert ($)</span>
+                    <span class="setting-value" id="maxLossVal">500</span>
+                </div>
+                <input type="range" id="maxLossSlider" min="50" max="2000" step="50" value="500">
+            </div>
+            <div class="setting-group">
+                <div class="setting-label">
+                    <span>Target Reps</span>
+                    <span class="setting-value" id="targetRepsVal">10</span>
+                </div>
+                <input type="range" id="targetRepsSlider" min="5" max="50" step="5" value="10">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- SETTINGS ---
+        const CONF = {
+            // Market params
+            tickSpeed: 50,
+            tickSize: 0.25,
+            pointValue: 50,
+            volatility: 0.4,
+            trendBias: -0.08,
+            strategy: 'drift',
+
+            // Game params
+            initialCapital: 10000,
+            maxLossAlert: 500,
+            targetReps: 10
+        };
+
+        // --- STATE ---
+        let state = {
+            active: false,
+            prices: [],
+            entryPrice: 0,
+            startTime: 0,
+            timer: null,
+
+            // Hesitation Logic
+            firstRedTime: null,
+            hesitationMs: 0
+        };
+
+        let stats = {
+            reps: 0,
+            totalReact: 0,
+            validCuts: 0
+        };
+
+        // --- DOM ---
+        const canvas = document.getElementById('chart');
+        const ctx = canvas.getContext('2d');
+        const elPnl = document.getElementById('pnlDisplay');
+        const elMsg = document.getElementById('centerMsg');
+        const elApp = document.getElementById('app');
+        const elHesitation = document.getElementById('hesitationBar');
+        const elChartContainer = document.getElementById('chartContainer');
+        const elTrainingToggle = document.getElementById('trainingToggle');
+        const elBtnBuy = document.getElementById('btnBuy');
+        const elBtnCut = document.getElementById('btnCut');
+        const elBuyPnl = document.getElementById('buyPnl');
+        const elCutPnl = document.getElementById('cutPnl');
+
+        // --- TRAINING MODE ---
+        let trainingMode = {
+            enabled: false,
+            currentTooltip: null,
+            step: 0
+        };
+
+        function toggleTrainingMode() {
+            trainingMode.enabled = !trainingMode.enabled;
+            elTrainingToggle.classList.toggle('active');
+
+            if (trainingMode.enabled) {
+                showTrainingTooltip('start');
+                elBtnBuy.classList.add('training-highlight');
+            } else {
+                clearTrainingTooltips();
+                elBtnBuy.classList.remove('training-highlight');
+                elBtnCut.classList.remove('training-highlight');
+            }
+        }
+
+        function showTrainingTooltip(stage) {
+            if (!trainingMode.enabled) return;
+            clearTrainingTooltips();
+
+            const tooltip = document.createElement('div');
+            tooltip.className = 'training-tooltip';
+
+            switch (stage) {
+                case 'start':
+                    tooltip.innerHTML = 'Press ENTER or click this button to begin your trade. The market will start moving!';
+                    tooltip.style.bottom = '80px';
+                    tooltip.style.left = '20px';
+                    tooltip.classList.add('bottom');
+                    elBtnBuy.classList.add('training-highlight');
+                    break;
+
+                case 'trading':
+                    tooltip.innerHTML = 'Watch the price! When it goes RED (below your entry), you\'re losing money. Cut it FAST!';
+                    tooltip.style.top = '80px';
+                    tooltip.style.left = '20px';
+                    tooltip.classList.add('top');
+                    elBtnBuy.classList.remove('training-highlight');
+                    break;
+
+                case 'losing':
+                    tooltip.innerHTML = '🚨 YOU\'RE LOSING! Hit SPACE or click FLATTEN immediately. Don\'t hesitate!';
+                    tooltip.style.bottom = '80px';
+                    tooltip.style.right = '20px';
+                    tooltip.style.left = 'auto';
+                    tooltip.classList.add('bottom');
+                    elBtnCut.classList.add('training-highlight');
+                    break;
+
+                case 'cut':
+                    const reaction = state.firstRedTime ? Date.now() - state.firstRedTime : 0;
+                    const grade = reaction < 300 ? '🔥 EXCELLENT!' : reaction < 600 ? '✅ GOOD' : '⚠️ TOO SLOW';
+                    tooltip.innerHTML = `${grade}<br>Reaction: ${reaction}ms<br>Press ENTER to try again!`;
+                    tooltip.style.top = '50%';
+                    tooltip.style.left = '50%';
+                    tooltip.style.transform = 'translate(-50%, -50%)';
+                    elBtnCut.classList.remove('training-highlight');
+                    elBtnBuy.classList.add('training-highlight');
+                    break;
+            }
+
+            elChartContainer.appendChild(tooltip);
+            trainingMode.currentTooltip = tooltip;
+        }
+
+        function clearTrainingTooltips() {
+            if (trainingMode.currentTooltip) {
+                trainingMode.currentTooltip.remove();
+                trainingMode.currentTooltip = null;
+            }
+        }
+
+        // Resize Canvas
+        function resize() {
+            canvas.width = canvas.parentElement.offsetWidth;
+            canvas.height = canvas.parentElement.offsetHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // --- LOGIC ---
+
+        function startTrade() {
+            if (state.active) return;
+
+            // Reset State
+            state.active = true;
+            state.entryPrice = 4500.00;
+            state.prices = new Array(200).fill(state.entryPrice); // Pre-fill for chart stability
+            state.firstRedTime = null;
+            state.startTime = Date.now();
+
+            // UI Reset
+            elApp.classList.add('active');
+            document.body.classList.remove('danger-mode');
+            elMsg.style.display = 'none';
+            elPnl.innerText = "$0.00";
+            elPnl.className = "pnl-overlay pnl-neutral";
+            elHesitation.style.width = '0%';
+            elCutPnl.innerText = '$0.00';
+
+            // Training Mode
+            showTrainingTooltip('trading');
+
+            // Momentum Factor (simulates market flow)
+            let momentum = 0;
+            let strategyPhase = 0;  // Track strategy progression
+            let tickCount = 0;
+
+            // Start Loop
+            if (state.timer) clearInterval(state.timer);
+            state.timer = setInterval(() => {
+                tickCount++;
+
+                // --- MARKET ALGORITHM ---
+                let shock = (Math.random() - 0.5) * 2;
+                let strategicMove = 0;
+
+                // Calculate based on selected strategy
+                switch (CONF.strategy) {
+                    case 'stophunt':
+                        // Stop Hunt: Sharp initial drop then reversal
+                        if (tickCount < 20) {
+                            strategicMove = -0.15;  // Quick drop to trigger stops
+                        } else if (tickCount < 40) {
+                            strategicMove = 0.08;   // Bounce back
+                        } else {
+                            strategicMove = CONF.trendBias;
+                        }
+                        break;
+
+                    case 'shakeout':
+                        // Shakeout: Fake breakdown then strong reversal
+                        if (tickCount < 15) {
+                            strategicMove = -0.12;
+                        } else if (tickCount < 25) {
+                            strategicMove = -0.18;  // Accelerate down
+                        } else {
+                            strategicMove = 0.10;   // Strong reversal
+                        }
+                        break;
+
+                    case 'beartrap':
+                        // Bear Trap: Initial weakness then rally
+                        if (tickCount < 10) {
+                            strategicMove = -0.10;
+                        } else if (tickCount < 30) {
+                            strategicMove = 0.12;   // Trap shorts
+                        } else {
+                            strategicMove = 0.05;
+                        }
+                        break;
+
+                    case 'bulltrap':
+                        // Bull Trap: Initial strength then sell-off
+                        if (tickCount < 10) {
+                            strategicMove = 0.10;
+                        } else if (tickCount < 40) {
+                            strategicMove = -0.12;  // Trap longs
+                        } else {
+                            strategicMove = -0.08;
+                        }
+                        break;
+
+                    case 'choppy':
+                        // Choppy: Oscillating range-bound
+                        strategicMove = Math.sin(tickCount / 8) * 0.08;
+                        break;
+
+                    case 'momentum':
+                        // Momentum Breakout: Building pressure then move
+                        if (tickCount < 20) {
+                            strategicMove = Math.sin(tickCount / 5) * 0.03;  // Compression
+                        } else {
+                            strategicMove = tickCount % 2 === 0 ? -0.10 : -0.08;  // Breakout
+                        }
+                        break;
+
+                    case 'vshape':
+                        // V-Shape: Sharp drop then sharp recovery
+                        if (tickCount < 25) {
+                            strategicMove = -0.15;  // Fast drop
+                        } else {
+                            strategicMove = 0.12;   // Fast recovery
+                        }
+                        break;
+
+                    case 'random':
+                        // Pure Random Walk
+                        strategicMove = 0;
+                        break;
+
+                    case 'drift':
+                    default:
+                        // Classic Drift (original behavior)
+                        if (Date.now() - state.startTime > 1000) {
+                            strategicMove = CONF.trendBias;
+                        }
+                        break;
+                }
+
+                // 2. Add Momentum (price tends to keep moving in same direction)
+                momentum = (momentum * 0.8) + (shock * CONF.volatility) + strategicMove;
+
+                // 4. Calculate Tick
+                let move = momentum;
+
+                // Snap to Tick Size (0.25)
+                const lastPrice = state.prices[state.prices.length - 1];
+                let newPrice = lastPrice + move;
+
+                // Round to nearest 0.25
+                newPrice = Math.round(newPrice * 4) / 4;
+
+                // Push & Shift
+                state.prices.push(newPrice);
+                if (state.prices.length > canvas.width / 4) state.prices.shift(); // Keep chart contained
+
+                updateUI(newPrice);
+                drawChart();
+
+            }, CONF.tickSpeed);
+        }
+
+        function updateUI(currentPrice) {
+            const diff = currentPrice - state.entryPrice;
+            const pnl = diff * CONF.pointValue;
+
+            elPnl.innerText = (pnl >= 0 ? '+' : '-') + '$' + Math.abs(pnl).toFixed(2);
+
+            // Update button P&L
+            const pnlText = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
+            elCutPnl.innerText = pnlText;
+
+            // Danger Logic
+            if (pnl < 0) {
+                elPnl.className = "pnl-overlay pnl-red";
+                document.body.classList.add('danger-mode');
+
+                if (!state.firstRedTime) {
+                    state.firstRedTime = Date.now();
+                    // Training Mode: Alert when losing
+                    showTrainingTooltip('losing');
+                }
+
+                // Visual Hesitation Bar
+                const hes = Date.now() - state.firstRedTime;
+                const pct = Math.min((hes / 1500) * 100, 100); // Max 1.5s
+                elHesitation.style.width = pct + '%';
+            } else {
+                elPnl.className = "pnl-overlay pnl-green";
+                document.body.classList.remove('danger-mode');
+                state.firstRedTime = null; // Reset if it bounces green
+                elHesitation.style.width = '0%';
+            }
+        }
+
+        function cutTrade() {
+            if (!state.active) return;
+            clearInterval(state.timer);
+            state.active = false;
+            elApp.classList.remove('active');
+            document.body.classList.remove('danger-mode');
+
+            const currentPrice = state.prices[state.prices.length - 1];
+            const pnl = (currentPrice - state.entryPrice) * CONF.pointValue;
+
+            // Grading
+            if (pnl < 0) {
+                const hes = state.firstRedTime ? Date.now() - state.firstRedTime : 0;
+                stats.reps++;
+                stats.validCuts++;
+                stats.totalReact += hes;
+
+                const avg = Math.round(stats.totalReact / stats.validCuts);
+                document.getElementById('avgReact').innerText = avg;
+                document.getElementById('repCount').innerText = stats.reps;
+
+                elMsg.innerText = `CUT: $${pnl.toFixed(2)} (${hes}ms)`;
+                elMsg.style.color = "#fff";
+            } else {
+                elMsg.innerText = "PROFIT TAKEN (DRILL FAILED)";
+                elMsg.style.color = "#555";
+            }
+            elMsg.style.display = 'block';
+
+            // Training Mode: Show feedback
+            showTrainingTooltip('cut');
+        }
+
+        // --- DRAWING ---
+        function drawChart() {
+            const w = canvas.width;
+            const h = canvas.height;
+            const prices = state.prices;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Calculate Scale
+            const max = Math.max(...prices, state.entryPrice + 2);
+            const min = Math.min(...prices, state.entryPrice - 2);
+            const range = max - min;
+            const padding = h * 0.2;
+
+            // Helper: Price to Y
+            const getY = (p) => h - ((p - min) / range * (h - padding * 2) + padding);
+            const entryY = getY(state.entryPrice);
+
+            // 1. Draw Grid / Entry Line
+            ctx.beginPath();
+            ctx.strokeStyle = '#333';
+            ctx.setLineDash([5, 5]);
+            ctx.moveTo(0, entryY);
+            ctx.lineTo(w, entryY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 2. Draw Price Line
+            ctx.beginPath();
+            ctx.lineWidth = 3;
+            ctx.lineJoin = 'round';
+
+            // We draw segments to color them correctly based on position relative to Entry
+            for (let i = 0; i < prices.length - 1; i++) {
+                const p1 = prices[i];
+                const p2 = prices[i + 1];
+                const x1 = (i / (prices.length - 1)) * w;
+                const x2 = ((i + 1) / (prices.length - 1)) * w;
+                const y1 = getY(p1);
+                const y2 = getY(p2);
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+
+                // Color Logic: Red if below entry, Green if above
+                // Use p2 (current point) for color
+                ctx.strokeStyle = p2 < state.entryPrice ? '#ff0033' : '#00e396';
+                ctx.stroke();
+            }
+
+            // 3. Draw Current Price Dot
+            const lastX = w;
+            const lastY = getY(prices[prices.length - 1]);
+            ctx.beginPath();
+            ctx.fillStyle = '#fff';
+            ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // --- SETTINGS CONTROLS ---
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.toggle('hidden');
+
+            // Force resize after layout update so canvas shrinks to fit
+            setTimeout(resize, 0);
+        }
+
+        // Wire up sliders
+        document.getElementById('driftSlider').addEventListener('input', (e) => {
+            CONF.trendBias = parseFloat(e.target.value);
+            document.getElementById('driftVal').innerText = e.target.value;
+        });
+
+        document.getElementById('volSlider').addEventListener('input', (e) => {
+            CONF.volatility = parseFloat(e.target.value);
+            document.getElementById('volVal').innerText = parseFloat(e.target.value).toFixed(2);
+        });
+
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            CONF.tickSpeed = parseInt(e.target.value);
+            document.getElementById('speedVal').innerText = e.target.value;
+        });
+
+        document.getElementById('pointSlider').addEventListener('input', (e) => {
+            CONF.pointValue = parseInt(e.target.value);
+            document.getElementById('pointVal').innerText = e.target.value;
+        });
+
+        document.getElementById('capitalSlider').addEventListener('input', (e) => {
+            CONF.initialCapital = parseInt(e.target.value);
+            document.getElementById('capitalVal').innerText = e.target.value;
+        });
+
+        document.getElementById('maxLossSlider').addEventListener('input', (e) => {
+            CONF.maxLossAlert = parseInt(e.target.value);
+            document.getElementById('maxLossVal').innerText = e.target.value;
+        });
+
+        document.getElementById('targetRepsSlider').addEventListener('input', (e) => {
+            CONF.targetReps = parseInt(e.target.value);
+            document.getElementById('targetRepsVal').innerText = e.target.value;
+            document.getElementById('repCount').innerText = `${stats.reps}/${e.target.value}`;
+        });
+
+        document.getElementById('strategySelect').addEventListener('change', (e) => {
+            CONF.strategy = e.target.value;
+        });
+
+        // --- INPUTS ---
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                cutTrade();
+            }
+            if (e.code === 'Enter') startTrade();
+        });
+
+    </script>
+</body>
+
+</html>
