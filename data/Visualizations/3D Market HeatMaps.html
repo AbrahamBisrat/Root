@@ -565,13 +565,36 @@
                 // Fetch real stock data
                 const rawStocks = await fetchRealData(type);
 
-                const packData = rawStocks.map((s, i) => ({
-                    r: Math.sqrt(s.marketCap) * 0.18,
-                    originalIndex: i,
-                    ...s
-                }));
-                packData.sort((a, b) => b.marketCap - a.marketCap);
-                d3.packSiblings(packData);
+                // Separate gainers and losers
+                const gainers = [];
+                const losers = [];
+
+                rawStocks.forEach((s, i) => {
+                    const item = {
+                        r: Math.sqrt(s.marketCap) * 0.18,
+                        originalIndex: i,
+                        ...s
+                    };
+                    if (s.change >= 0) {
+                        gainers.push(item);
+                    } else {
+                        losers.push(item);
+                    }
+                });
+
+                // Sort each group by market cap (largest in center)
+                gainers.sort((a, b) => b.marketCap - a.marketCap);
+                losers.sort((a, b) => b.marketCap - a.marketCap);
+
+                // Pack each group independently
+                d3.packSiblings(gainers);
+                d3.packSiblings(losers);
+
+                // Combine back with positioning info
+                const allStocks = [
+                    ...gainers.map(g => ({ ...g, isGain: true })),
+                    ...losers.map(l => ({ ...l, isGain: false }))
+                ];
 
                 // Create body mesh (InstancedMesh for performance)
                 const bodyGeo = new THREE.BoxGeometry(1, 1, 1);
@@ -579,7 +602,7 @@
                     roughness: 0.6,
                     metalness: 0.1
                 });
-                cityMesh = new THREE.InstancedMesh(bodyGeo, bodyMat, rawStocks.length);
+                cityMesh = new THREE.InstancedMesh(bodyGeo, bodyMat, allStocks.length);
 
                 const dummy = new THREE.Object3D();
                 const color = new THREE.Color();
@@ -588,13 +611,15 @@
                 // Shared roof geometry
                 const roofGeo = new THREE.PlaneGeometry(1, 1);
 
-                packData.forEach((d, i) => {
-                    const isGain = d.change >= 0;
+                allStocks.forEach((d, i) => {
+                    const isGain = d.isGain;
                     const h = Math.max(Math.abs(d.change) * CONFIG.layout.heightScale, CONFIG.layout.minHeight);
                     const w = d.r * 2.0; // Dense packing
 
+                    // x, z come from the independent packing for each group
                     const x = d.x;
                     const z = d.y;
+                    // y: gainers grow up from 0, losers grow down from 0
                     const y = isGain ? h / 2 : -h / 2;
 
                     // Body instance
@@ -632,8 +657,11 @@
                     scene.add(roof);
                     roofMeshes.push(roof);
 
-                    // Async load logo for top 60%
-                    if (i < packData.length * 0.6) {
+                    // Async load logo for top 60% of each category
+                    const gainerCount = gainers.length;
+                    const isTopGainer = isGain && i < gainerCount * 0.6;
+                    const isTopLoser = !isGain && (i - gainerCount) < losers.length * 0.6;
+                    if (isTopGainer || isTopLoser) {
                         loadLogoIntoTexture(d, textureObj);
                     }
 
