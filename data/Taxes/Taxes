@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>IRS Publication 550-T: Supplemental Guide for Active Traders</title>
+    <style>
+        body {
+            font-family: "Times New Roman", serif;
+            background-color: #f0f0f0;
+            color: #222;
+            line-height: 1.5;
+            margin: 40px;
+        }
+
+        .form-container {
+            background-color: #fff;
+            border: 1px solid #000;
+            max-width: 800px;
+            margin: auto;
+            padding: 40px;
+            box-shadow: 10px 10px 0px #888;
+        }
+
+        .header {
+            border-bottom: 3px solid #003366;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .irs-logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #003366;
+            letter-spacing: -1px;
+        }
+
+        .dept-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            text-align: right;
+        }
+
+        h1 {
+            font-size: 22px;
+            text-align: center;
+            text-transform: uppercase;
+            margin: 20px 0;
+            border: 2px solid #000;
+            padding: 10px;
+        }
+
+        .section-title {
+            background-color: #003366;
+            color: #fff;
+            padding: 5px 10px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .warning-box {
+            border: 2px solid #b22222;
+            padding: 15px;
+            margin: 20px 0;
+            background-color: #fff5f5;
+        }
+
+        .interactive-tool {
+            background-color: #eef4f8;
+            border: 1px solid #003366;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #666;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #003366;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #002244;
+        }
+
+        #audit-result {
+            margin-top: 15px;
+            padding: 10px;
+            font-weight: bold;
+            border: 1px dashed #000;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="form-container">
+        <div class="header">
+            <div class="irs-logo">IRS</div>
+            <div class="dept-title">Department of the Treasury<br>Internal Revenue Service</div>
+        </div>
+
+        <h1>Publication 550-T (2024)<br>Tax Liability for High-Volume Securities Traders</h1>
+
+        <p>This publication provides guidance for individuals who trade securities as a business. If your trading
+            activity is frequent, regular, and continuous, you may qualify for <strong>Trader Tax Status (TTS)</strong>.
+        </p>
+
+        <div class="section-title">The Wash Sale Rule (Section 1091)</div>
+        <p>For most investors, a "wash sale" occurs when you sell a security at a loss and buy a "substantially
+            identical" security within 30 days before or after the sale. The loss is disallowed for the current tax year
+            and added to the basis of the new position.</p>
+
+        <div class="warning-box">
+            <strong>CAUTION:</strong> Avid traders often trigger thousands of wash sales, potentially resulting in a
+            massive tax bill even if the net account value decreased.
+        </div>
+
+        <div class="section-title">Interactive Liability Evaluator</div>
+        <div class="interactive-tool">
+            <p><em>Determine if your trading activity meets the "Trader" threshold or remains "Investor" status.</em>
+            </p>
+
+            <label for="trades">Average trades per month:</label>
+            <input type="number" id="trades" placeholder="e.g., 50">
+
+            <label for="holding">Average holding period (days):</label>
+            <input type="number" id="holding" placeholder="e.g., 2">
+
+            <label for="intent">Primary intent of trading:</label>
+            <select id="intent">
+                <option value="income">Daily Income / Short-term swings</option>
+                <option value="growth">Long-term Capital Appreciation</option>
+            </select>
+
+            <button onclick="evaluateStatus()">Run Compliance Check</button>
+            <div id="audit-result"></div>
+        </div>
+
+        <div class="section-title">Mark-to-Market Election (Section 475(f))</div>
+        <p>Qualified traders may elect to use the mark-to-market method of accounting. Under this method:</p>
+        <ul>
+            <li>Gains and losses are treated as ordinary income/loss.</li>
+            <li>The <strong>Wash Sale Rule does not apply</strong>.</li>
+            <li>The $3,000 capital loss limitation is waived.</li>
+        </ul>
+        <p><em>Note: Election must be filed by April 15th of the prior tax year.</em></p>
+    </div>
+
+    <script>
+        function evaluateStatus() {
+            const trades = document.getElementById('trades').value;
+            const holding = document.getElementById('holding').value;
+            const intent = document.getElementById('intent').value;
+            const result = document.getElementById('audit-result');
+
+            result.style.display = "block";
+
+            if (trades >= 30 && holding <= 30 && intent === 'income') {
+                result.innerHTML = "DETERMINATION: Potential Trader Tax Status (TTS). You may qualify for Section 179 deductions and Schedule C expense reporting. Consider Section 475(f) election for next cycle.";
+                result.style.color = "#006400";
+                result.style.backgroundColor = "#e6fffa";
+            } else {
+                result.innerHTML = "DETERMINATION: Investor Status. You are subject to the $3,000 net capital loss limitation and strict Wash Sale rules. Report all activity on Form 8949 and Schedule D.";
+                result.style.color = "#b22222";
+                result.style.backgroundColor = "#fff5f5";
+            }
+        }
+    </script>
+
+</body>
+
+</html>
